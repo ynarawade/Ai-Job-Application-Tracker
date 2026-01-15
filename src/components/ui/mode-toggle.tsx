@@ -4,13 +4,16 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 function ModeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
+
+  const isDark: boolean = resolvedTheme === "dark";
   return (
     <Button
       variant={"secondary"}
-      onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+      size={"icon"}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
     >
-      {theme === "dark" ? <Sun /> : <Moon />}
+      {isDark ? <Sun /> : <Moon />}
     </Button>
   );
 }
