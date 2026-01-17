@@ -8,6 +8,15 @@ export type Stage =
   | "Withdrawn";
 
 export type WorkMode = "Remote" | "Hybrid" | "On-Site";
+export type Platform =
+  | "LinkedIn"
+  | "Internshala"
+  | "Indeed"
+  | "Refferal"
+  | "Carrer Page"
+  | "Naukri"
+  | "Apna"
+  | "Other";
 
 export type JobType = "Full-Time" | "Part-Time" | "Contract" | "Internship";
 
@@ -19,5 +28,7 @@ export interface JobApplication {
   workMode: WorkMode;
   salary: string;
   applied: Date;
+  platform: Platform;
+  additionlNoted?: string;
   stage: Stage;
 }
