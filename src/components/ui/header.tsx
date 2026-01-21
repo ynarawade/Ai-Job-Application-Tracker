@@ -1,7 +1,6 @@
-import { Button } from "@/components/ui/button";
 import Container from "@/components/ui/container";
 import ModeToggle from "@/components/ui/mode-toggle";
-import { User2 } from "lucide-react";
+import UserAvatar from "@/components/ui/userAvatar";
 
 function Header() {
   return (
@@ -13,9 +12,7 @@ function Header() {
           <ModeToggle />
 
           {/* Future: Supabase user avatar / menu */}
-          <Button variant={"secondary"} size={"icon"}>
-            <User2 size={16} />
-          </Button>
+          <UserAvatar />
         </div>
       </Container>
     </header>

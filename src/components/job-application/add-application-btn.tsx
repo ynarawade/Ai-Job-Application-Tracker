@@ -305,7 +305,7 @@ function AddApplicationButton() {
                   </FieldLabel>
                   <Textarea
                     {...register("additionalNotes")}
-                    className="min-h-[90px]"
+                    className="min-h-22.5"
                     placeholder="Recruiter name, follow-up date, interview feedback..."
                   />
                 </Field>
