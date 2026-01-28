@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -35,7 +35,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
+import { addJobApplication } from "@/lib/actions";
 import { JobApplicationSchema } from "@/lib/schema/job-application";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type FormValues = z.infer<typeof JobApplicationSchema>;
 
@@ -43,6 +46,7 @@ function AddApplicationButton() {
   const {
     register,
     control,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
@@ -59,13 +63,28 @@ function AddApplicationButton() {
       additionalNotes: "",
     },
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  function onSubmit(data: FormValues) {
-    console.log("SUBMITTED:", data);
+  async function onSubmit(data: FormValues) {
+    setIsSubmitting(true);
+
+    const res = await addJobApplication(data);
+
+    setIsSubmitting(false);
+
+    if (!res.success) {
+      toast.error(res.message);
+      return;
+    }
+
+    reset();
+    setOpen(false);
+    toast.success(res.message);
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Add Application</Button>
       </DialogTrigger>
@@ -157,7 +176,7 @@ function AddApplicationButton() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            initialFocus
+                            autoFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -177,7 +196,10 @@ function AddApplicationButton() {
                         variant="outline"
                         spacing={2}
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={(val) => {
+                          if (!val) return;
+                          field.onChange(val);
+                        }}
                       >
                         <ToggleGroupItem value="Full-Time">
                           Full-Time
@@ -208,7 +230,10 @@ function AddApplicationButton() {
                         variant="outline"
                         spacing={2}
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={(val) => {
+                          if (!val) return;
+                          field.onChange(val);
+                        }}
                       >
                         <ToggleGroupItem value="Remote">Remote</ToggleGroupItem>
                         <ToggleGroupItem value="Hybrid">Hybrid</ToggleGroupItem>
@@ -232,7 +257,10 @@ function AddApplicationButton() {
                         variant="outline"
                         spacing={2}
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={(val) => {
+                          if (!val) return;
+                          field.onChange(val);
+                        }}
                         className="flex-wrap"
                       >
                         {[
@@ -276,7 +304,10 @@ function AddApplicationButton() {
                         variant="outline"
                         spacing={2}
                         value={field.value}
-                        onValueChange={field.onChange}
+                        onValueChange={(val) => {
+                          if (!val) return;
+                          field.onChange(val);
+                        }}
                         className="flex-wrap"
                       >
                         {[
@@ -315,11 +346,20 @@ function AddApplicationButton() {
             {/* ================= ACTIONS ================= */}
             <Field orientation="horizontal">
               <DialogClose asChild>
-                <Button variant="outline" type="button">
+                <Button variant="outline" type="button" disabled={isSubmitting}>
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">Save Application</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Application"
+                )}
+              </Button>
             </Field>
           </FieldGroup>
         </form>

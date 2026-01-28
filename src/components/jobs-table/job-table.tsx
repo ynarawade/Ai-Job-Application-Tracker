@@ -7,63 +7,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-import { JobApplication } from "@/lib/types/job";
+async function JobsTable() {
+  const supabase = await createSupabaseServerClient();
 
-export const dummyJobs: JobApplication[] = [
-  {
-    id: 1,
-    companyName: "Google",
-    jobTitle: "Software Engineer Intern",
-    jobType: "Internship",
-    workMode: "Hybrid",
-    salary: "₹80,000 / month",
-    applied: new Date("2024-12-05"),
-    stage: "Applied",
-  },
-  {
-    id: 2,
-    companyName: "Amazon",
-    jobTitle: "Frontend Developer",
-    jobType: "Full-Time",
-    workMode: "On-Site",
-    salary: "18 LPA",
-    applied: new Date("2024-11-28"),
-    stage: "Interview",
-  },
-  {
-    id: 3,
-    companyName: "Razorpay",
-    jobTitle: "Backend Engineer Intern",
-    jobType: "Internship",
-    workMode: "Remote",
-    salary: "₹35,000 / month",
-    applied: new Date("2024-12-08"),
-    stage: "OA",
-  },
-  {
-    id: 4,
-    companyName: "Flipkart",
-    jobTitle: "Software Engineer I",
-    jobType: "Full-Time",
-    workMode: "Hybrid",
-    salary: "14 LPA",
-    applied: new Date("2024-11-20"),
-    stage: "Offer",
-  },
-  {
-    id: 5,
-    companyName: "Swiggy",
-    jobTitle: "SDE I",
-    jobType: "Full-Time",
-    workMode: "Hybrid",
-    salary: "12 LPA",
-    applied: new Date("2024-12-01"),
-    stage: "Rejected",
-  },
-];
+  const { data, error } = await supabase
+    .from("job_applications")
+    .select("*")
+    .order("applied", { ascending: false });
 
-function JobsTable() {
+  if (error) {
+    console.error("Supabase error:", error.message);
+    return <p className="text-destructive">Failed to load jobs.</p>;
+  }
+
   return (
     <div className="border p-2 rounded-2xl">
       <Table>
@@ -80,22 +38,28 @@ function JobsTable() {
         </TableHeader>
 
         <TableBody>
-          {dummyJobs.map((job) => (
+          {data?.map((job) => (
             <TableRow key={job.id} className="h-15">
-              <TableCell>{job.companyName}</TableCell>
-              <TableCell className="font-medium">{job.jobTitle}</TableCell>
+              <TableCell>{job.company_name}</TableCell>
+
+              <TableCell className="font-medium">{job.job_title}</TableCell>
+
               <TableCell className="text-muted-foreground">
-                {job.jobType}
+                {job.job_type}
               </TableCell>
+
               <TableCell className="text-muted-foreground">
-                {job.workMode}
+                {job.work_mode}
               </TableCell>
+
               <TableCell className="text-muted-foreground">
                 {job.salary}
               </TableCell>
+
               <TableCell className="text-muted-foreground">
-                {job.applied.toLocaleDateString()}
+                {new Date(job.applied).toLocaleDateString()}
               </TableCell>
+
               <TableCell>
                 <StageBadge stage={job.stage} />
               </TableCell>
