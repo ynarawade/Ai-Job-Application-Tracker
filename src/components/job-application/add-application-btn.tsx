@@ -80,7 +80,7 @@ function AddApplicationButton({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
-  const [startTransition] = useTransition();
+  const [_, startTransition] = useTransition();
 
   const router = useRouter();
 
