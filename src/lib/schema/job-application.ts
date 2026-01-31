@@ -35,13 +35,14 @@ export const StageEnum = z.enum([
 /* MAIN SCHEMA */
 
 export const JobApplicationSchema = z.object({
-  companyName: z.string().min(1, "Company name is required"),
+  id: z.string().optional(),
+  company_name: z.string().min(1, "Company name is required"),
 
-  jobTitle: z.string().min(1, "Job title is required"),
+  job_title: z.string().min(1, "Job title is required"),
 
-  jobType: JobTypeEnum,
+  job_type: JobTypeEnum,
 
-  workMode: WorkModeEnum,
+  work_mode: WorkModeEnum,
 
   salary: z.string().min(1, "Salary or stipend is required"),
 

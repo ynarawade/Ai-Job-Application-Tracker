@@ -8,7 +8,9 @@ function Home() {
     <div>
       <Header />
       <Container className="mt-10 space-y-3">
-        <AddApplicationButton />
+        <div className="text-right">
+          <AddApplicationButton />
+        </div>
         <JobsTable />
       </Container>
     </div>

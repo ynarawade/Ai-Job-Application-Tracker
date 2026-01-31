@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Pencil, Plus } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -35,14 +35,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-import { addJobApplication } from "@/lib/actions";
+import { addJobApplication, editJobAction } from "@/lib/actions";
 import { JobApplicationSchema } from "@/lib/schema/job-application";
 import { useState } from "react";
 import { toast } from "sonner";
 
 type FormValues = z.infer<typeof JobApplicationSchema>;
 
-function AddApplicationButton() {
+interface JobApplicationProps {
+  data?: FormValues;
+}
+
+function AddApplicationButton({ data }: JobApplicationProps) {
   const {
     register,
     control,
@@ -52,24 +56,28 @@ function AddApplicationButton() {
   } = useForm<FormValues>({
     resolver: zodResolver(JobApplicationSchema),
     defaultValues: {
-      companyName: "",
-      jobTitle: "",
-      salary: "",
-      applied: new Date(),
-      jobType: "Internship",
-      workMode: "Remote",
-      platform: "LinkedIn",
-      stage: "Applied",
-      additionalNotes: "",
+      id: data?.id ?? undefined,
+      company_name: data?.company_name ?? "",
+      job_title: data?.job_title ?? "",
+      salary: data?.salary ?? "",
+      applied: data?.applied ? new Date(data.applied) : new Date(),
+      job_type: data?.job_type ?? "Internship",
+      work_mode: data?.work_mode ?? "Remote",
+      platform: data?.platform ?? "LinkedIn",
+      stage: data?.stage ?? "Applied",
+      additionalNotes: data?.additionalNotes ?? "",
     },
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
 
-  async function onSubmit(data: FormValues) {
+  async function onSubmit(formData: FormValues) {
     setIsSubmitting(true);
 
-    const res = await addJobApplication(data);
+    const isEdit = !!formData.id;
+    const res = isEdit
+      ? await editJobAction(formData, formData.id!)
+      : await addJobApplication(formData);
 
     setIsSubmitting(false);
 
@@ -86,18 +94,39 @@ function AddApplicationButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Application</Button>
+        {data ? (
+          <Button
+            onClick={(e) => e.stopPropagation()}
+            variant={"ghost"}
+            className="w-full flex items-center justify-start gap-4"
+          >
+            <Pencil className="text-blue-500" size={16} />
+            <span>Edit</span>
+          </Button>
+        ) : (
+          <Button>
+            <Plus />
+            <span>New Application</span>
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="w-[95vw] max-w-180 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Job Application</DialogTitle>
+          <DialogTitle>
+            {data ? "Edit Job Application" : "Add Job Application"}
+          </DialogTitle>
           <DialogDescription>
             Track and manage a new job or internship application.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(onSubmit)(e);
+          }}
+        >
           <FieldGroup className="space-y-6 py-4">
             {/* ================= JOB DETAILS ================= */}
             <FieldSet>
@@ -108,12 +137,12 @@ function AddApplicationButton() {
                 <Field>
                   <FieldLabel>Company Name</FieldLabel>
                   <Input
-                    {...register("companyName")}
+                    {...register("company_name")}
                     placeholder="Google, Microsoft, Amazon"
                   />
-                  {errors.companyName && (
+                  {errors.company_name && (
                     <p className="text-xs text-destructive mt-1">
-                      {errors.companyName.message}
+                      {errors.company_name.message}
                     </p>
                   )}
                 </Field>
@@ -121,12 +150,12 @@ function AddApplicationButton() {
                 <Field>
                   <FieldLabel>Job Title</FieldLabel>
                   <Input
-                    {...register("jobTitle")}
+                    {...register("job_title")}
                     placeholder="SDE I, Frontend Developer"
                   />
-                  {errors.jobTitle && (
+                  {errors.job_title && (
                     <p className="text-xs text-destructive mt-1">
-                      {errors.jobTitle.message}
+                      {errors.job_title.message}
                     </p>
                   )}
                 </Field>
@@ -188,7 +217,7 @@ function AddApplicationButton() {
                 <Field>
                   <FieldLabel>Job Type</FieldLabel>
                   <Controller
-                    name="jobType"
+                    name="job_type"
                     control={control}
                     render={({ field }) => (
                       <ToggleGroup
@@ -222,7 +251,7 @@ function AddApplicationButton() {
                 <Field>
                   <FieldLabel>Work Mode</FieldLabel>
                   <Controller
-                    name="workMode"
+                    name="work_mode"
                     control={control}
                     render={({ field }) => (
                       <ToggleGroup
@@ -342,26 +371,26 @@ function AddApplicationButton() {
                 </Field>
               </FieldGroup>
             </FieldSet>
-
-            {/* ================= ACTIONS ================= */}
-            <Field orientation="horizontal">
-              <DialogClose asChild>
-                <Button variant="outline" type="button" disabled={isSubmitting}>
-                  Cancel
-                </Button>
-              </DialogClose>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Application"
-                )}
-              </Button>
-            </Field>
           </FieldGroup>
+          {/* ================= ACTIONS ================= */}
+          <div className="flex justify-end gap-3">
+            <DialogClose asChild>
+              <Button variant="outline" type="button" disabled={isSubmitting}>
+                Cancel
+              </Button>
+            </DialogClose>
+
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span> {data ? "Updating...." : "Submitting...."}</span>
+                </>
+              ) : (
+                <span>{data ? "Update Application" : "Save Application"}</span>
+              )}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

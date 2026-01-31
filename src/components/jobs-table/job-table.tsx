@@ -1,3 +1,4 @@
+import ActionsRow from "@/components/jobs-table/actions_row";
 import StageBadge from "@/components/ui/stage-badge";
 import {
   Table,
@@ -34,6 +35,7 @@ async function JobsTable() {
             <TableHead>Salary</TableHead>
             <TableHead>Applied</TableHead>
             <TableHead>Stage</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
 
@@ -62,6 +64,9 @@ async function JobsTable() {
 
               <TableCell>
                 <StageBadge stage={job.stage} />
+              </TableCell>
+              <TableCell>
+                <ActionsRow data={job} />
               </TableCell>
             </TableRow>
           ))}
