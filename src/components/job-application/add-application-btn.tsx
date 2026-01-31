@@ -37,16 +37,26 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { addJobApplication, editJobAction } from "@/lib/actions";
 import { JobApplicationSchema } from "@/lib/schema/job-application";
-import { useState } from "react";
+import type { JobApplicationRow } from "@/lib/types/job";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 type FormValues = z.infer<typeof JobApplicationSchema>;
 
 interface JobApplicationProps {
-  data?: FormValues;
+  data?: JobApplicationRow;
+  onBeforeOpen?: () => void;
+  onOptimisticAdd?: (row: JobApplicationRow) => void;
+  onOptimisticEdit?: (row: JobApplicationRow) => void;
 }
 
-function AddApplicationButton({ data }: JobApplicationProps) {
+function AddApplicationButton({
+  data,
+  onBeforeOpen,
+  onOptimisticEdit,
+  onOptimisticAdd,
+}: JobApplicationProps) {
   const {
     register,
     control,
@@ -65,38 +75,77 @@ function AddApplicationButton({ data }: JobApplicationProps) {
       work_mode: data?.work_mode ?? "Remote",
       platform: data?.platform ?? "LinkedIn",
       stage: data?.stage ?? "Applied",
-      additionalNotes: data?.additionalNotes ?? "",
+      additional_notes: data?.additional_notes ?? "",
     },
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [startTransition] = useTransition();
+
+  const router = useRouter();
 
   async function onSubmit(formData: FormValues) {
     setIsSubmitting(true);
 
+    const optimisticRow: JobApplicationRow = {
+      id: formData.id ?? crypto.randomUUID(), // temp id for new
+      company_name: formData.company_name,
+      job_title: formData.job_title,
+      salary: formData.salary,
+      applied: formData.applied.toISOString().slice(0, 10),
+      job_type: formData.job_type,
+      work_mode: formData.work_mode,
+      platform: formData.platform,
+      stage: formData.stage,
+      additional_notes: formData.additional_notes ?? null,
+    };
+
     const isEdit = !!formData.id;
-    const res = isEdit
-      ? await editJobAction(formData, formData.id!)
-      : await addJobApplication(formData);
 
-    setIsSubmitting(false);
-
-    if (!res.success) {
-      toast.error(res.message);
-      return;
+    // optimistic update
+    if (isEdit) {
+      onOptimisticEdit?.(optimisticRow);
+      onBeforeOpen?.();
+    } else {
+      onOptimisticAdd?.(optimisticRow);
     }
 
+    // close dialog instantly (no waiting)
     reset();
     setOpen(false);
-    toast.success(res.message);
+
+    // server call
+    startTransition(async () => {
+      const res = isEdit
+        ? await editJobAction(formData, formData.id!)
+        : await addJobApplication(formData);
+
+      if (!res.success) {
+        toast.error(res.message);
+        router.refresh(); // rollback
+        return;
+      }
+
+      toast.success(res.message);
+
+      //sync DB truth (for temp ids)
+      router.refresh();
+    });
   }
+
+  const onInvalid = (errs: any) => {
+    console.log("FORM INVALID ❌", errs);
+    toast.error("Form invalid");
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {data ? (
           <Button
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
             variant={"ghost"}
             className="w-full flex items-center justify-start gap-4"
           >
@@ -105,7 +154,7 @@ function AddApplicationButton({ data }: JobApplicationProps) {
           </Button>
         ) : (
           <Button>
-            <Plus />
+            <Plus className="h-4 w-4" />
             <span>New Application</span>
           </Button>
         )}
@@ -121,12 +170,7 @@ function AddApplicationButton({ data }: JobApplicationProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit(onSubmit)(e);
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
           <FieldGroup className="space-y-6 py-4">
             {/* ================= JOB DETAILS ================= */}
             <FieldSet>
@@ -298,7 +342,7 @@ function AddApplicationButton({ data }: JobApplicationProps) {
                           "Apna",
                           "Naukri",
                           "Internshala",
-                          "Company Career Page",
+                          "Career Page",
                           "Referral",
                           "Other",
                         ].map((p) => (
@@ -364,7 +408,7 @@ function AddApplicationButton({ data }: JobApplicationProps) {
                     <span className="text-muted-foreground">(optional)</span>
                   </FieldLabel>
                   <Textarea
-                    {...register("additionalNotes")}
+                    {...register("additional_notes")}
                     className="min-h-22.5"
                     placeholder="Recruiter name, follow-up date, interview feedback..."
                   />

@@ -12,23 +12,23 @@ export type Platform =
   | "LinkedIn"
   | "Internshala"
   | "Indeed"
-  | "Refferal"
-  | "Carrer Page"
+  | "Referral"
+  | "Career Page"
   | "Naukri"
   | "Apna"
   | "Other";
 
 export type JobType = "Full-Time" | "Part-Time" | "Contract" | "Internship";
 
-export interface JobApplication {
-  id: number;
-  companyName: string;
-  jobTitle: string;
-  jobType: JobType;
-  workMode: WorkMode;
+export type JobApplicationRow = {
+  id: string;
+  company_name: string;
+  job_title: string;
+  job_type: JobType;
+  work_mode: WorkMode;
   salary: string;
-  applied: Date;
+  applied: string | null;
   platform: Platform;
-  additionlNoted?: string;
   stage: Stage;
-}
+  additional_notes?: string | null;
+};

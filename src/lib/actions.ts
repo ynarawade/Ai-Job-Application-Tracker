@@ -35,30 +35,28 @@ export async function addJobApplication(data: JobSchema) {
   console.log("User id", user.id);
 
   // Insert into Supabase
-  const { error } = await supabase.from("job_applications").insert({
-    user_id: user.id,
-    company_name: parsed.data.company_name,
-    job_title: parsed.data.job_title,
-    job_type: parsed.data.job_type,
-    work_mode: parsed.data.work_mode,
-    salary: parsed.data.salary,
-    applied: parsed.data.applied.toISOString().slice(0, 10),
-    platform: parsed.data.platform,
-    stage: parsed.data.stage,
-    additional_notes: parsed.data.additionalNotes ?? null,
-  });
+  const { data: inserted, error } = await supabase
+    .from("job_applications")
+    .insert({
+      user_id: user.id,
+      company_name: parsed.data.company_name,
+      job_title: parsed.data.job_title,
+      job_type: parsed.data.job_type,
+      work_mode: parsed.data.work_mode,
+      salary: parsed.data.salary,
+      applied: parsed.data.applied.toISOString().slice(0, 10),
+      platform: parsed.data.platform,
+      stage: parsed.data.stage,
+      additional_notes: parsed.data.additional_notes ?? null,
+    })
+    .select("*")
+    .single();
 
   if (error) {
-    return {
-      success: false,
-      message: error.message,
-    };
+    return { success: false, message: error.message };
   }
-  revalidatePath("/");
-  return {
-    success: true,
-    message: "Application added successfully",
-  };
+
+  return { success: true, message: "Added", row: inserted };
 }
 
 export async function deleteJobAction(id: string) {
@@ -134,7 +132,7 @@ export async function editJobAction(data: JobSchema, id: string) {
       applied: parsed.data.applied.toISOString().slice(0, 10),
       platform: parsed.data.platform,
       stage: parsed.data.stage,
-      additional_notes: parsed.data.additionalNotes ?? null,
+      additional_notes: parsed.data.additional_notes ?? null,
     })
     .eq("id", id);
 

@@ -50,7 +50,7 @@ export const JobApplicationSchema = z.object({
 
   platform: PlatformEnum,
 
-  additionalNotes: z.string().optional(),
+  additional_notes: z.string().optional(),
 
   stage: StageEnum,
 });

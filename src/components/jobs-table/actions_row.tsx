@@ -1,42 +1,47 @@
 "use client";
 
 import { Ellipsis, Trash } from "lucide-react";
-import { useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-import EditApplicationButton from "@/components/job-application/EditApplicationBtn";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import AddApplicationButton from "@/components/job-application/add-application-btn";
 import { deleteJobAction } from "@/lib/actions";
-import type { JobApplicationSchema } from "@/lib/schema/job-application";
-import type z from "zod";
-type FormValues = z.infer<typeof JobApplicationSchema>;
-type ActionsRowProps = {
-  data: FormValues;
-};
+import type { JobApplicationRow } from "@/lib/types/job";
 
-export default function ActionsRow({ data }: ActionsRowProps) {
-  const [isPending, startTransition] = useTransition();
+export default function ActionsRow({
+  row,
+  onOptimisticDelete,
+  onOptimisticEdit,
+}: {
+  row: JobApplicationRow;
+  onOptimisticDelete: (id: string) => void;
+  onOptimisticEdit: (row: JobApplicationRow) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleDelete = () => {
-    startTransition(async () => {
-      const res = await deleteJobAction(data.id ?? "");
+  const handleDelete = async () => {
+    onOptimisticDelete(row.id);
+    setMenuOpen(false);
 
-      if (!res.success) {
-        toast.error(res.message);
-        return;
-      }
+    const res = await deleteJobAction(row.id);
 
-      toast.success("Job deleted");
-    });
+    if (!res.success) {
+      toast.error(res.message);
+      return;
+    }
+
+    toast.success("Job deleted");
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger asChild>
         <button className="p-1 rounded-md hover:bg-muted">
           <Ellipsis size={16} />
@@ -44,14 +49,23 @@ export default function ActionsRow({ data }: ActionsRowProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-          <EditApplicationButton data={data} />
+        <DropdownMenuItem
+          asChild
+          onSelect={(e) => {
+            e.preventDefault();
+            setMenuOpen(false);
+          }}
+        >
+          <AddApplicationButton
+            data={row}
+            onBeforeOpen={() => setMenuOpen(false)}
+            onOptimisticEdit={onOptimisticEdit}
+          />
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleDelete} disabled={isPending}>
-          <div className="flex items-center gap-x-2">
-            <Trash className="text-red-500" />
-            <span>Delete</span>
-          </div>
+
+        <DropdownMenuItem onClick={handleDelete}>
+          <Trash className="text-red-500 mr-2" size={16} />
+          Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
