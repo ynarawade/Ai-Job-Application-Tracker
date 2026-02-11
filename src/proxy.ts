@@ -19,7 +19,7 @@ export default async function middleware(request: NextRequest) {
 
   // Logged in → prevent going back to auth pages
   if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return response;
