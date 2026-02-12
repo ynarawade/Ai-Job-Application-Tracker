@@ -1,3 +1,4 @@
+import { ROUTE_LABELS } from "@/lib/constants";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -21,4 +22,20 @@ export function getInitials(value: string) {
     parts[0].charAt(0).toUpperCase() +
     parts[parts.length - 1].charAt(0).toUpperCase()
   );
+}
+
+export function getBreadcrumbs(pathname: string) {
+  const segments = pathname.split("/").filter(Boolean);
+
+  return segments.map((segment, index) => {
+    const href = "/" + segments.slice(0, index + 1).join("/");
+
+    return {
+      label:
+        ROUTE_LABELS[segment] ??
+        segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      href,
+      isLast: index === segments.length - 1,
+    };
+  });
 }

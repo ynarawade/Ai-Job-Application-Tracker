@@ -1,5 +1,4 @@
-import JobCharts from "@/components/JobStats/JobCharts";
-import StatsCards from "@/components/JobStats/StatsCard";
+import StatsCards from "@/components/JobStats/StatsCards";
 import { getJobStats } from "@/lib/queries/jobs";
 
 export default async function JobStats() {
@@ -8,7 +7,7 @@ export default async function JobStats() {
   return (
     <div className="space-y-4">
       <StatsCards total={stats.total} byStage={stats.byStage} />
-      <JobCharts byStage={stats.byStage} byJobType={stats.byJobType} />
+      {/* <JobCharts byStage={stats.byStage} byJobType={stats.byJobType} /> */}
     </div>
   );
 }

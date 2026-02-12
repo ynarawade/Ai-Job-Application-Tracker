@@ -1,4 +1,4 @@
-import JobsTableClient from "@/components/jobs-table/JobsTableClient";
+import JobsTableClient2 from "@/components/jobs-table/JobsTableClient2";
 import { getJobs } from "@/lib/queries/jobs";
 
 export default async function JobsTable({
@@ -13,7 +13,7 @@ export default async function JobsTable({
   const { rows, count } = await getJobs({ q, page, pageSize });
 
   return (
-    <JobsTableClient
+    <JobsTableClient2
       initialRows={rows}
       totalCount={count}
       page={page}

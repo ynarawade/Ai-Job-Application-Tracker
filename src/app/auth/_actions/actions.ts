@@ -38,6 +38,8 @@ export async function signInWithGoogle() {
   }
 
   if (data?.url) {
+    console.log("DATA URL", data.url);
+
     redirect(data.url);
   }
 }
