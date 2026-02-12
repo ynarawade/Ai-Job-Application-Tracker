@@ -4,7 +4,7 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { SidebarUser } from "@/lib/types/user";
 
-export default async function DashboardLayout({
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
