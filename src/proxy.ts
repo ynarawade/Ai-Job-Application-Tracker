@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export default async function middleware(request: NextRequest) {
   const response = NextResponse.next();
-
   const supabase = createSupabaseServerClient();
 
   const {
@@ -13,9 +12,9 @@ export default async function middleware(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
   const isLanding = request.nextUrl.pathname === "/";
 
-  // Not logged in → block protected routes
-  if (!user && !isAuthRoute) {
-    return NextResponse.redirect(new URL("/auth", request.url));
+  // Logged in user trying to access landing → redirect to dashboard
+  if (user && isLanding) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Logged in → prevent going back to auth pages
@@ -23,9 +22,9 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Logged in user trying to access landing → redirect to dashboard
-  if (user && isLanding) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Not logged in trying to access protected routes (not landing, not auth)
+  if (!user && !isAuthRoute && !isLanding) {
+    return NextResponse.redirect(new URL("/auth", request.url));
   }
 
   return response;
